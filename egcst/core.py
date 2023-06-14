@@ -9,13 +9,15 @@ from shapely.geometry import Point as sly_Point
 from ground.base import get_context
 from sect.triangulation import Triangulation
 context = get_context()
-Contour, Point, sect_Polygon = context.contour_cls, context.point_cls, context.polygon_cls
+sect_Contour, sect_Point, sect_Polygon = context.contour_cls, context.point_cls, context.polygon_cls
 
 
 class CrossSection():
     def __init__(self,
-                 min_step=0.04,
+                 min_step=0.5,
                  input_file_name='input.txt'):
+        self.triangulated = False
+        self.triangles_saved = False
         self.min_step = min_step
         self.input_file_name = input_file_name
         with open(self.input_file_name) as f:
@@ -129,7 +131,7 @@ class CrossSection():
                     p_attribution.append(i_p)
             try:
                 self.new_point_attribution[min(p_attribution, key=self.nesting_dict.get)].append(
-                    Point(point[0], point[1]))
+                    sect_Point(point[0], point[1]))
             except:
                 pass
 
@@ -147,6 +149,11 @@ class CrossSection():
         plt.savefig(fig_blank_file_name, dpi=dpi*3)
 
     def triangulate(self):
+        if self.triangulated:
+            print("You may not call the .triangulate() on this instance of the class CrossSection more than once. You have already called it once. If you intend to repeat a triangulation for this cross-section, you need to create a new instance of the class CrossSection and call .triangulate() on it.")
+            return
+        
+        self.triangulated = True
         for i_p in range(self.n_polygons):
             if 1 in self.nesting_matrix[i_p, :] and -1 in self.nesting_matrix[i_p, :]:
                 for j_p in np.where(self.nesting_matrix[i_p, :] == 1)[0]:
@@ -158,8 +165,8 @@ class CrossSection():
         for p in self.polygons:
             p_list = list()
             for point in p:
-                p_list.append(Point(point[0], point[1]))
-            self.c_list.append(Contour(p_list[:-1]))
+                p_list.append(sect_Point(point[0], point[1]))
+            self.c_list.append(sect_Contour(p_list[:-1]))
 
         self.p_list = list()
         for i_c, c in enumerate(self.c_list):
@@ -181,8 +188,19 @@ class CrossSection():
                        output_file_name_triangles='triangles.txt',
                        output_file_name_points='points.txt',
                        output_file_name='output.txt'):
-        self.the_all_points = np.concatenate(
-            (self.all_points, self.new_points))
+        if self.triangles_saved:
+            print("You may not call the .save_triangles() on this instance of the class CrossSection more than once. You have already called it once. If you intend to save triangles again for this cross-section after triangulation, you need to create a new instance of the class CrossSection, to call .triangulate() to triangulate it and then to call .save_triangles() on it.")
+            return
+        
+        if not self.triangulated:
+            print("You are trying to save triangles while you have not yet triangulated the cross-section for this instance of the classCrossSection. So you need to first call .triangulate() and then to call .save_triangles() to save the triangles you will have gotten.")
+            return
+        
+        self.triangles_saved = True
+        if self.new_points:
+            self.the_all_points = np.concatenate((self.all_points, self.new_points))
+        else:
+            self.the_all_points = np.copy(self.all_points)
         self.new_array = list()
         count = -1
         with open(output_file_name, 'w') as f:
@@ -210,6 +228,14 @@ class CrossSection():
                         (i_tri + 1, _tri[0] + 1, _tri[1] + 1, _tri[2] + 1))
 
     def draw_triangles(self, fig_triangles_file_name='output_triangles.png'):
+        if not self.triangulated:
+            print("You are trying to draw triangles while you have not yet triangulated the cross-section for this instance of the classCrossSection nor saved those trianlges. So you need to first call .triangulate(), then to call .save_triangles(), and then to call this method.")
+            return
+        
+        if not self.triangles_saved:
+            print("You may not call the .draw_triangles() on this instance of the class CrossSection before you saved the triangles by calling the .save_triangles() method.")
+            return
+        
         fig, ax = plt.subplots()
         for i_c, p in enumerate(self.polygons):
             ax.add_patch(Polygon(np.array(p), alpha=0.2, facecolor=list(
