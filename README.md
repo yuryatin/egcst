@@ -13,7 +13,9 @@ This package depends on the standard Python module `sys` as well as the non-stan
 # How to use it
 Very easy. The package has only one class `CrossSection()`, which is initiated with the input text file containing the coordinates for the polygons of the  engineering geological cross-section. This class has only 5 'public' methods: `.draw_blank()`, `.triangulate()`, `.save_triangles()`, `.draw_triangles()`, `.do_everything()`, which (except for the last one) are expected to be called in this order (and never repeated for the same object).<br/> The illustration of how to use this package can be found in the attached file [egcst_illustration.ipybn](https://github.com/yuryatin/egcst/blob/main/egcst_illustration.ipynb) .<br/> Briefly this can be expressed like this:
 ```python
-import egcst
+from egcst import CrossSection
 cs = CrossSection(input_file_name="input.txt", min_step=1.0)
 cs.do_everything()
 ```
+![output_triangles](https://github.com/yuryatin/egcst/assets/14263965/b549f8e7-071c-406c-b515-7ae984076e8f)
+
