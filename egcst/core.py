@@ -76,7 +76,7 @@ class CrossSection():
                         else:
                             n_steps = int(np.abs(delta_y) / min_step) + 1
                             i_step = delta_y / n_steps
-                            for i in range(n_steps)-1:
+                            for i in range(n_steps-1):
                                 y_2 = y_0 + (i + 1) * i_step
                                 x_2 = x_0 + (y_2 - y_0) / slope
                                 entended_p.append([x_2, y_2])
