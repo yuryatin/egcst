@@ -15,7 +15,7 @@ setup(
     url='https://github.com/yuryatin/egcst',
     download_url='https://github.com/yuryatin/egcst/archive/refs/tags/v0.0.10.tar.gz',
     keywords=['engineering', 'geological', 'cross',
-              'sections', 'mapping', 'triangulation', 'delaunay', 'step'. 'stp', 'iso 10303-21'],
+              'sections', 'mapping', 'triangulation', 'delaunay', 'step', 'stp', 'iso 10303-21'],
     classifiers=[],
     install_requires=['numpy', 'matplotlib', 'shapely', 'ground', 'sect']
 )
