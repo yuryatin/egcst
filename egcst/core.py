@@ -25,11 +25,12 @@ class CrossSection():
 
         self.polygons = list()
         for p_n, row in enumerate(self.data):
-            self.polygons.append(list())
-            for item in row.strip().split('\t'):
-                if item.strip():
-                    items = item.strip().split(',')
-                    self.polygons[p_n].append([float(items[0].strip()), float(items[1].strip())])
+            if row.strip():
+                self.polygons.append(list())
+                for item in row.strip().split('\t'):
+                    if item.strip():
+                        items = item.strip().split(',')
+                        self.polygons[p_n].append([float(items[0].strip()), float(items[1].strip())])
 
         for i_p, p in enumerate(self.polygons):
             self.polygons[i_p].append(p[0])
