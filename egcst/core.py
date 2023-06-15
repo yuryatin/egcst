@@ -262,7 +262,7 @@ DATA;
                     f.write(',')
                 f.write("\n\tPOLYLOOP('%d', (#%d, #%d, #%d))" %
                         (i_tri + 2 + i_p, _tri[0] + 1, _tri[1] + 1, _tri[2] + 1))
-            f.write(");\nENDSEC;\nEND-ISO-10303-21;\n")
+            f.write("));\nENDSEC;\nEND-ISO-10303-21;\n")
 
     def draw_triangles(self, fig_triangles_file_name='output_triangles.png'):
         if not self.triangulated:
