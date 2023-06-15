@@ -1,4 +1,5 @@
 from sys import stdout
+from datetime import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
@@ -30,7 +31,8 @@ class CrossSection():
                 for item in row.strip().split('\t'):
                     if item.strip():
                         items = item.strip().split(',')
-                        self.polygons[p_n].append([float(items[0].strip()), float(items[1].strip())])
+                        self.polygons[p_n].append(
+                            [float(items[0].strip()), float(items[1].strip())])
 
         for i_p, p in enumerate(self.polygons):
             self.polygons[i_p].append(p[0])
@@ -154,7 +156,7 @@ class CrossSection():
         if self.triangulated:
             print("You may not call the .triangulate() on this instance of the class CrossSection more than once. You have already called it once. If you intend to repeat a triangulation for this cross-section, you need to create a new instance of the class CrossSection and call .triangulate() on it.")
             return
-        
+
         self.triangulated = True
         for i_p in range(self.n_polygons):
             if 1 in self.nesting_matrix[i_p, :] and -1 in self.nesting_matrix[i_p, :]:
@@ -189,18 +191,20 @@ class CrossSection():
     def save_triangles(self,
                        output_file_name_triangles='triangles.txt',
                        output_file_name_points='points.txt',
-                       output_file_name='output.txt'):
+                       output_file_name='output.txt',
+                       output_file_name_step='output.step'):
         if self.triangles_saved:
             print("You may not call the .save_triangles() on this instance of the class CrossSection more than once. You have already called it once. If you intend to save triangles again for this cross-section after triangulation, you need to create a new instance of the class CrossSection, to call .triangulate() to triangulate it and then to call .save_triangles() on it.")
             return
-        
+
         if not self.triangulated:
             print("You are trying to save triangles while you have not yet triangulated the cross-section for this instance of the classCrossSection. So you need to first call .triangulate() and then to call .save_triangles() to save the triangles you will have gotten.")
             return
-        
+
         self.triangles_saved = True
         if self.new_points:
-            self.the_all_points = np.concatenate((self.all_points, self.new_points))
+            self.the_all_points = np.concatenate(
+                (self.all_points, self.new_points))
         else:
             self.the_all_points = np.copy(self.all_points)
         self.new_array = list()
@@ -229,15 +233,46 @@ class CrossSection():
                 f.write("%d\t%d\t%d\t%d\n" %
                         (i_tri + 1, _tri[0] + 1, _tri[1] + 1, _tri[2] + 1))
 
+        header = f'''ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('Export step file of the Python package egcst with triangles derived after a Delaunay triangulation of an engineering geological cross-section'), '2;1');
+FILE_NAME('{output_file_name_step}', '{datetime.now().replace(microsecond=0).isoformat()}', ('Alexander Yuryatin'), ('N/A'), ' ', 'the Python package egcst', ' ');
+FILE_SCHEMA(('AP203'));
+ENDSEC;
+DATA;        
+'''
+        with open(output_file_name_step, 'w') as f:
+            f.write(header)
+            for i_p, p in enumerate(self.the_all_points):
+                f.write("#%d=VERTEX_POINT('', CARTESIAN_POINT('', (%.11f, %.11f, 0.0)));\n" % (
+                    i_p + 1, p[0], p[1]))
+            for i_tri, _tri in enumerate(self.new_array):
+                f.write("#%d=TRIANGULATED_SURFACE('', (#%d, #%d, #%d));\n" %
+                        (i_tri + 2 + i_p, _tri[0] + 1, _tri[1] + 1, _tri[2] + 1))
+            f.write("ENDSEC;\nEND-ISO-10303-21;\n")
+
+        with open('mesh_' + output_file_name_step, 'w') as f:
+            f.write(header)
+            for i_p, p in enumerate(self.the_all_points):
+                f.write("#%d=VERTEX_POINT('', CARTESIAN_POINT('', (%.11f, %.11f, 0.0)));\n" % (
+                    i_p + 1, p[0], p[1]))
+            f.write("MESH('',(")
+            for i_tri, _tri in enumerate(self.new_array):
+                if i_tri:
+                    f.write(',')
+                f.write("\n\tPOLYLOOP('%d', (#%d, #%d, #%d))" %
+                        (i_tri + 2 + i_p, _tri[0] + 1, _tri[1] + 1, _tri[2] + 1))
+            f.write(");\nENDSEC;\nEND-ISO-10303-21;\n")
+
     def draw_triangles(self, fig_triangles_file_name='output_triangles.png'):
         if not self.triangulated:
             print("You are trying to draw triangles while you have not yet triangulated the cross-section for this instance of the classCrossSection nor saved those trianlges. So you need to first call .triangulate(), then to call .save_triangles(), and then to call this method.")
             return
-        
+
         if not self.triangles_saved:
             print("You may not call the .draw_triangles() on this instance of the class CrossSection before you saved the triangles by calling the .save_triangles() method.")
             return
-        
+
         fig, ax = plt.subplots()
         for i_c, p in enumerate(self.polygons):
             ax.add_patch(Polygon(np.array(p), alpha=0.2, facecolor=list(
